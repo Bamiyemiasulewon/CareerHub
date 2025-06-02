@@ -1,3 +1,15 @@
+# CareerHub
+CareerHub is a job board platform tailored for developers. It helps devs discover job opportunities from various companies, filter based on stack or experience level, and apply directly—all in one place.
+
+## 🚀 Features
+
+- 🔍 Search and filter developer-focused job listings
+- 🧠 AI-powered job recommendations (optional)
+- 💼 Detailed job descriptions and company profiles
+- 📝 Easy application process with resume upload
+- 📱 Responsive design (mobile & desktop)
+
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -52,4 +64,4 @@ export default tseslint.config({
   },
 })
 ```
-# CareerHub
+
