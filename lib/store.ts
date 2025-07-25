@@ -1,64 +1,17 @@
+"use client"
+
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-
-// Types
-interface User {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  role: "jobseeker" | "employer"
-  username?: string
-}
-
-interface Job {
-  id: string
-  title: string
-  company: string
-  location: string
-  type: string
-  salary?: string
-  description: string
-  requirements: string[]
-  benefits: string[]
-  postedAt: string
-  applicationDeadline?: string
-  isRemote: boolean
-  experienceLevel: string
-}
-
-interface Notification {
-  id: string
-  type: "job_match" | "application_update" | "message" | "system"
-  title: string
-  message: string
-  read: boolean
-  createdAt: string
-  actionUrl?: string
-}
-
-interface Message {
-  id: string
-  senderId: string
-  receiverId: string
-  content: string
-  timestamp: string
-  read: boolean
-  type: "text" | "file" | "image"
-  attachments?: Array<{
-    name: string
-    url: string
-    type: string
-  }>
-}
-
-interface Conversation {
-  id: string
-  participants: User[]
-  lastMessage?: Message
-  unreadCount: number
-  updatedAt: string
-}
+import type {
+  User,
+  Message,
+  Conversation,
+  Notification,
+  SearchFilters,
+  UserSearchResult,
+  MessageDraft,
+  Job,
+} from "./types"
 
 // Auth Store
 interface AuthState {
@@ -67,8 +20,8 @@ interface AuthState {
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => void
-  register: (userData: Partial<User> & { password: string }) => Promise<void>
-  updateProfile: (userData: Partial<User>) => Promise<void>
+  updateProfile: (updates: Partial<User>) => void
+  setUser: (user: User) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -77,50 +30,130 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       isLoading: false,
+
       login: async (email: string, password: string) => {
         set({ isLoading: true })
         try {
           // Mock login - replace with actual API call
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+
           const mockUser: User = {
-            id: "1",
-            name: "John Doe",
-            email,
-            role: "jobseeker",
+            id: "user-1",
             username: "johndoe",
-            avatar: "/placeholder-user.jpg",
+            displayName: "John Doe",
+            realName: "John Doe",
+            email: email,
+            avatar: "https://picsum.photos/100/100?random=1",
+            bio: "Senior Frontend Developer passionate about creating amazing user experiences",
+            role: "job-seeker",
+            verified: true,
+            premium: false,
+            online: true,
+            lastSeen: new Date().toISOString(),
+            profileComplete: 85,
+            createdAt: "2023-01-15T00:00:00Z",
+            updatedAt: new Date().toISOString(),
+            privacy: {
+              profilePublic: true,
+              showEmail: false,
+              showPhone: false,
+              allowMessages: "everyone",
+              showOnlineStatus: true,
+              showLastSeen: true,
+            },
+            jobSeekerProfile: {
+              availability: "actively-looking",
+              salaryExpectation: { min: 80000, max: 120000, currency: "USD" },
+              preferredJobTypes: ["full-time", "contract"],
+              locationPreferences: {
+                remote: true,
+                onSite: false,
+                hybrid: true,
+                locations: ["San Francisco, CA", "New York, NY"],
+              },
+              skills: [
+                { id: "1", name: "React", level: "expert", yearsOfExperience: 5, endorsements: [], verified: true },
+                {
+                  id: "2",
+                  name: "TypeScript",
+                  level: "advanced",
+                  yearsOfExperience: 4,
+                  endorsements: [],
+                  verified: true,
+                },
+                {
+                  id: "3",
+                  name: "Node.js",
+                  level: "intermediate",
+                  yearsOfExperience: 3,
+                  endorsements: [],
+                  verified: false,
+                },
+              ],
+              experience: [
+                {
+                  id: "1",
+                  title: "Senior Frontend Developer",
+                  company: "TechCorp Inc.",
+                  location: "San Francisco, CA",
+                  startDate: "2022-01-01",
+                  current: true,
+                  description: "Leading frontend development for enterprise applications",
+                  achievements: ["Improved app performance by 40%", "Led team of 5 developers"],
+                  skills: ["React", "TypeScript", "GraphQL"],
+                },
+              ],
+              education: [
+                {
+                  id: "1",
+                  degree: "Bachelor of Computer Science",
+                  school: "Stanford University",
+                  location: "Stanford, CA",
+                  startDate: "2016-09-01",
+                  endDate: "2020-06-01",
+                  gpa: "3.8",
+                  achievements: ["Magna Cum Laude", "Dean's List"],
+                },
+              ],
+              certifications: [],
+              portfolio: [
+                {
+                  id: "1",
+                  title: "E-commerce Platform",
+                  description: "Full-stack e-commerce solution built with React and Node.js",
+                  type: "link",
+                  url: "https://example.com/portfolio/ecommerce",
+                  thumbnail: "https://picsum.photos/300/200?random=10",
+                  tags: ["React", "Node.js", "MongoDB"],
+                  createdAt: "2023-06-01T00:00:00Z",
+                },
+              ],
+              references: [],
+              profileViews: 245,
+              searchAppearances: 89,
+            },
           }
+
           set({ user: mockUser, isAuthenticated: true, isLoading: false })
         } catch (error) {
           set({ isLoading: false })
           throw error
         }
       },
+
       logout: () => {
         set({ user: null, isAuthenticated: false })
       },
-      register: async (userData) => {
-        set({ isLoading: true })
-        try {
-          // Mock registration - replace with actual API call
-          const newUser: User = {
-            id: Date.now().toString(),
-            name: userData.name || "",
-            email: userData.email || "",
-            role: userData.role || "jobseeker",
-            username: userData.username,
-            avatar: "/placeholder-user.jpg",
-          }
-          set({ user: newUser, isAuthenticated: true, isLoading: false })
-        } catch (error) {
-          set({ isLoading: false })
-          throw error
-        }
-      },
-      updateProfile: async (userData) => {
+
+      updateProfile: (updates: Partial<User>) => {
         const { user } = get()
         if (user) {
-          set({ user: { ...user, ...userData } })
+          set({ user: { ...user, ...updates, updatedAt: new Date().toISOString() } })
         }
+      },
+
+      setUser: (user: User) => {
+        set({ user, isAuthenticated: true })
       },
     }),
     {
@@ -130,27 +163,733 @@ export const useAuthStore = create<AuthState>()(
   ),
 )
 
+// Messaging Store
+interface MessagingState {
+  conversations: Conversation[]
+  messages: Record<string, Message[]>
+  activeConversation: string | null
+  typingIndicators: Record<string, Array<{ userId: string; isTyping: boolean }>>
+  onlineUsers: Record<string, boolean>
+  unreadCount: number
+  messageDrafts: Record<string, MessageDraft>
+
+  // Actions
+  setActiveConversation: (conversationId: string | null) => void
+  addMessage: (message: Message) => void
+  updateMessage: (messageId: string, updates: Partial<Message>) => void
+  deleteMessage: (messageId: string) => void
+  markAsRead: (conversationId: string) => void
+  archiveConversation: (conversationId: string) => void
+  muteConversation: (conversationId: string) => void
+  pinConversation: (conversationId: string) => void
+  saveDraft: (conversationId: string, draft: MessageDraft) => void
+  clearDraft: (conversationId: string) => void
+  setTypingIndicator: (conversationId: string, userId: string, isTyping: boolean) => void
+  setUserOnlineStatus: (userId: string, online: boolean) => void
+  loadConversations: () => void
+}
+
+export const useMessagingStore = create<MessagingState>()(
+  persist(
+    (set, get) => ({
+      conversations: [],
+      messages: {},
+      activeConversation: null,
+      typingIndicators: {},
+      onlineUsers: {},
+      unreadCount: 0,
+      messageDrafts: {},
+
+      setActiveConversation: (conversationId) => {
+        set({ activeConversation: conversationId })
+        if (conversationId) {
+          get().markAsRead(conversationId)
+        }
+      },
+
+      addMessage: (message) => {
+        const { messages, conversations } = get()
+        const conversationMessages = messages[message.conversationId] || []
+
+        set({
+          messages: {
+            ...messages,
+            [message.conversationId]: [...conversationMessages, message],
+          },
+        })
+
+        // Update conversation last message
+        const updatedConversations = conversations.map((conv) =>
+          conv.id === message.conversationId ? { ...conv, lastMessage: message, updatedAt: message.createdAt } : conv,
+        )
+        set({ conversations: updatedConversations })
+
+        // Update unread count if not active conversation
+        if (get().activeConversation !== message.conversationId) {
+          const conversation = conversations.find((c) => c.id === message.conversationId)
+          if (conversation) {
+            const updatedConv = { ...conversation, unreadCount: conversation.unreadCount + 1 }
+            set({
+              conversations: conversations.map((c) => (c.id === message.conversationId ? updatedConv : c)),
+              unreadCount: get().unreadCount + 1,
+            })
+          }
+        }
+      },
+
+      updateMessage: (messageId, updates) => {
+        const { messages } = get()
+        const updatedMessages = { ...messages }
+
+        Object.keys(updatedMessages).forEach((conversationId) => {
+          updatedMessages[conversationId] = updatedMessages[conversationId].map((msg) =>
+            msg.id === messageId ? { ...msg, ...updates } : msg,
+          )
+        })
+
+        set({ messages: updatedMessages })
+      },
+
+      deleteMessage: (messageId) => {
+        const { messages } = get()
+        const updatedMessages = { ...messages }
+
+        Object.keys(updatedMessages).forEach((conversationId) => {
+          updatedMessages[conversationId] = updatedMessages[conversationId].filter((msg) => msg.id !== messageId)
+        })
+
+        set({ messages: updatedMessages })
+      },
+
+      markAsRead: (conversationId) => {
+        const { conversations, messages } = get()
+        const conversation = conversations.find((c) => c.id === conversationId)
+
+        if (conversation && conversation.unreadCount > 0) {
+          const updatedConversations = conversations.map((conv) =>
+            conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv,
+          )
+
+          set({
+            conversations: updatedConversations,
+            unreadCount: get().unreadCount - conversation.unreadCount,
+          })
+
+          // Mark messages as read
+          const conversationMessages = messages[conversationId] || []
+          const updatedMessages = conversationMessages.map((msg) => ({
+            ...msg,
+            read: true,
+            readAt: new Date().toISOString(),
+          }))
+
+          set({
+            messages: {
+              ...messages,
+              [conversationId]: updatedMessages,
+            },
+          })
+        }
+      },
+
+      archiveConversation: (conversationId) => {
+        const { conversations } = get()
+        const updatedConversations = conversations.map((conv) =>
+          conv.id === conversationId ? { ...conv, archived: !conv.archived } : conv,
+        )
+        set({ conversations: updatedConversations })
+      },
+
+      muteConversation: (conversationId) => {
+        const { conversations } = get()
+        const updatedConversations = conversations.map((conv) =>
+          conv.id === conversationId ? { ...conv, muted: !conv.muted } : conv,
+        )
+        set({ conversations: updatedConversations })
+      },
+
+      pinConversation: (conversationId) => {
+        const { conversations } = get()
+        const updatedConversations = conversations.map((conv) =>
+          conv.id === conversationId ? { ...conv, pinned: !conv.pinned } : conv,
+        )
+        set({ conversations: updatedConversations })
+      },
+
+      saveDraft: (conversationId, draft) => {
+        const { messageDrafts } = get()
+        set({
+          messageDrafts: {
+            ...messageDrafts,
+            [conversationId]: draft,
+          },
+        })
+      },
+
+      clearDraft: (conversationId) => {
+        const { messageDrafts } = get()
+        const { [conversationId]: removed, ...rest } = messageDrafts
+        set({ messageDrafts: rest })
+      },
+
+      setTypingIndicator: (conversationId, userId, isTyping) => {
+        const { typingIndicators } = get()
+        const indicators = typingIndicators[conversationId] || []
+
+        if (isTyping) {
+          const existingIndex = indicators.findIndex((i) => i.userId === userId)
+          if (existingIndex === -1) {
+            set({
+              typingIndicators: {
+                ...typingIndicators,
+                [conversationId]: [...indicators, { userId, isTyping }],
+              },
+            })
+          }
+        } else {
+          set({
+            typingIndicators: {
+              ...typingIndicators,
+              [conversationId]: indicators.filter((i) => i.userId !== userId),
+            },
+          })
+        }
+      },
+
+      setUserOnlineStatus: (userId, online) => {
+        const { onlineUsers } = get()
+        set({
+          onlineUsers: {
+            ...onlineUsers,
+            [userId]: online,
+          },
+        })
+      },
+
+      loadConversations: () => {
+        // Mock conversations data
+        const mockConversations: Conversation[] = [
+          {
+            id: "conv-1",
+            participants: ["user-1", "user-2"],
+            lastMessage: {
+              id: "msg-1",
+              conversationId: "conv-1",
+              senderId: "user-2",
+              recipientId: "user-1",
+              content: "Hi! I saw your profile and I'm interested in discussing a frontend position at our company.",
+              type: "text",
+              attachments: [],
+              reactions: [],
+              edited: false,
+              read: false,
+              delivered: true,
+              createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
+              context: {
+                type: "job-inquiry",
+                jobId: "job-1",
+              },
+            },
+            unreadCount: 1,
+            archived: false,
+            muted: false,
+            pinned: false,
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+            updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+            jobContext: {
+              jobId: "job-1",
+              jobTitle: "Senior Frontend Developer",
+            },
+          },
+          {
+            id: "conv-2",
+            participants: ["user-1", "user-3"],
+            lastMessage: {
+              id: "msg-2",
+              conversationId: "conv-2",
+              senderId: "user-1",
+              recipientId: "user-3",
+              content: "Thanks for the interview opportunity. Looking forward to hearing back from you!",
+              type: "text",
+              attachments: [],
+              reactions: [],
+              edited: false,
+              read: true,
+              delivered: true,
+              createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+            },
+            unreadCount: 0,
+            archived: false,
+            muted: false,
+            pinned: true,
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
+            updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+          },
+        ]
+
+        const mockMessages: Record<string, Message[]> = {
+          "conv-1": [
+            {
+              id: "msg-1-1",
+              conversationId: "conv-1",
+              senderId: "user-2",
+              recipientId: "user-1",
+              content: "Hi John! I came across your profile and I'm really impressed with your React expertise.",
+              type: "text",
+              attachments: [],
+              reactions: [],
+              edited: false,
+              read: true,
+              delivered: true,
+              createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+            },
+            {
+              id: "msg-1-2",
+              conversationId: "conv-1",
+              senderId: "user-2",
+              recipientId: "user-1",
+              content:
+                "We have an exciting Senior Frontend Developer position that I think would be perfect for you. Would you be interested in learning more?",
+              type: "text",
+              attachments: [],
+              reactions: [{ id: "reaction-1", userId: "user-1", emoji: "👍", createdAt: new Date().toISOString() }],
+              edited: false,
+              read: true,
+              delivered: true,
+              createdAt: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(),
+              context: {
+                type: "job-inquiry",
+                jobId: "job-1",
+              },
+            },
+            {
+              id: "msg-1-3",
+              conversationId: "conv-1",
+              senderId: "user-1",
+              recipientId: "user-2",
+              content:
+                "Hi Sarah! Thank you for reaching out. I'm definitely interested in learning more about the position. Could you share more details about the role and the company?",
+              type: "text",
+              attachments: [],
+              reactions: [],
+              edited: false,
+              read: true,
+              delivered: true,
+              createdAt: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(),
+            },
+            {
+              id: "msg-1-4",
+              conversationId: "conv-1",
+              senderId: "user-2",
+              recipientId: "user-1",
+              content: "Hi! I saw your profile and I'm interested in discussing a frontend position at our company.",
+              type: "text",
+              attachments: [],
+              reactions: [],
+              edited: false,
+              read: false,
+              delivered: true,
+              createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+              context: {
+                type: "job-inquiry",
+                jobId: "job-1",
+              },
+            },
+          ],
+          "conv-2": [
+            {
+              id: "msg-2-1",
+              conversationId: "conv-2",
+              senderId: "user-3",
+              recipientId: "user-1",
+              content:
+                "Hi John, I'd like to schedule an interview for the React Developer position. Are you available this week?",
+              type: "text",
+              attachments: [],
+              reactions: [],
+              edited: false,
+              read: true,
+              delivered: true,
+              createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+              context: {
+                type: "interview",
+                jobId: "job-2",
+              },
+            },
+            {
+              id: "msg-2-2",
+              conversationId: "conv-2",
+              senderId: "user-1",
+              recipientId: "user-3",
+              content: "Thanks for the interview opportunity. Looking forward to hearing back from you!",
+              type: "text",
+              attachments: [],
+              reactions: [],
+              edited: false,
+              read: true,
+              delivered: true,
+              createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+            },
+          ],
+        }
+
+        set({
+          conversations: mockConversations,
+          messages: mockMessages,
+          unreadCount: mockConversations.reduce((sum, conv) => sum + conv.unreadCount, 0),
+          onlineUsers: {
+            "user-2": true,
+            "user-3": false,
+            "user-4": true,
+          },
+        })
+      },
+    }),
+    {
+      name: "messaging-storage",
+      partialize: (state) => ({
+        conversations: state.conversations,
+        messages: state.messages,
+        messageDrafts: state.messageDrafts,
+      }),
+    },
+  ),
+)
+
+// User Discovery Store
+interface UserDiscoveryState {
+  searchResults: UserSearchResult[]
+  searchQuery: string
+  searchFilters: SearchFilters
+  recentSearches: string[]
+  suggestedUsers: User[]
+  featuredUsers: User[]
+  isSearching: boolean
+
+  // Actions
+  setSearchQuery: (query: string) => void
+  updateSearchFilters: (filters: Partial<SearchFilters>) => void
+  addRecentSearch: (query: string) => void
+  clearRecentSearches: () => void
+  loadSuggestedUsers: () => void
+  loadFeaturedUsers: () => void
+}
+
+export const useUserDiscoveryStore = create<UserDiscoveryState>()(
+  persist(
+    (set, get) => ({
+      searchResults: [],
+      searchQuery: "",
+      searchFilters: {},
+      recentSearches: [],
+      suggestedUsers: [],
+      featuredUsers: [],
+      isSearching: false,
+
+      setSearchQuery: (query) => {
+        set({ searchQuery: query })
+      },
+
+      updateSearchFilters: (filters) => {
+        const { searchFilters } = get()
+        set({ searchFilters: { ...searchFilters, ...filters } })
+      },
+
+      addRecentSearch: (query) => {
+        const { recentSearches } = get()
+        const filtered = recentSearches.filter((s) => s !== query)
+        set({ recentSearches: [query, ...filtered].slice(0, 10) })
+      },
+
+      clearRecentSearches: () => {
+        set({ recentSearches: [] })
+      },
+
+      loadSuggestedUsers: () => {
+        const mockSuggestedUsers: User[] = [
+          {
+            id: "user-4",
+            username: "sarahchen",
+            displayName: "Sarah Chen",
+            realName: "Sarah Chen",
+            email: "sarah@example.com",
+            avatar: "https://picsum.photos/100/100?random=4",
+            bio: "Product Manager at TechStart. Passionate about user experience and product strategy.",
+            role: "employer",
+            verified: true,
+            premium: true,
+            online: true,
+            lastSeen: new Date().toISOString(),
+            profileComplete: 95,
+            createdAt: "2023-02-01T00:00:00Z",
+            updatedAt: new Date().toISOString(),
+            privacy: {
+              profilePublic: true,
+              showEmail: false,
+              showPhone: false,
+              allowMessages: "everyone",
+              showOnlineStatus: true,
+              showLastSeen: true,
+            },
+            employerProfile: {
+              companyName: "TechStart Inc.",
+              companySize: "50-100",
+              industry: "Technology",
+              website: "https://techstart.com",
+              description: "We're building the future of work with innovative SaaS solutions.",
+              culture: "Fast-paced, collaborative, and innovation-driven environment.",
+              benefits: ["Health Insurance", "Remote Work", "Stock Options", "Learning Budget"],
+              locations: ["San Francisco, CA", "Remote"],
+              foundedYear: 2020,
+              socialLinks: {
+                linkedin: "https://linkedin.com/company/techstart",
+                twitter: "https://twitter.com/techstart",
+              },
+              jobsPosted: 15,
+              successfulHires: 8,
+              responseRate: 95,
+              averageResponseTime: 4,
+            },
+          },
+          {
+            id: "user-5",
+            username: "mikejohnson",
+            displayName: "Mike Johnson",
+            realName: "Michael Johnson",
+            email: "mike@example.com",
+            avatar: "https://picsum.photos/100/100?random=5",
+            bio: "Full-stack developer with 8 years of experience. Love working with React, Node.js, and AWS.",
+            role: "job-seeker",
+            verified: false,
+            premium: false,
+            online: false,
+            lastSeen: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+            profileComplete: 78,
+            createdAt: "2023-03-15T00:00:00Z",
+            updatedAt: new Date().toISOString(),
+            privacy: {
+              profilePublic: true,
+              showEmail: false,
+              showPhone: false,
+              allowMessages: "everyone",
+              showOnlineStatus: true,
+              showLastSeen: true,
+            },
+            jobSeekerProfile: {
+              availability: "open-to-offers",
+              salaryExpectation: { min: 90000, max: 130000, currency: "USD" },
+              preferredJobTypes: ["full-time", "contract"],
+              locationPreferences: {
+                remote: true,
+                onSite: true,
+                hybrid: true,
+                locations: ["Austin, TX", "Remote"],
+              },
+              skills: [
+                {
+                  id: "1",
+                  name: "JavaScript",
+                  level: "expert",
+                  yearsOfExperience: 8,
+                  endorsements: [],
+                  verified: true,
+                },
+                { id: "2", name: "React", level: "expert", yearsOfExperience: 6, endorsements: [], verified: true },
+                {
+                  id: "3",
+                  name: "Node.js",
+                  level: "advanced",
+                  yearsOfExperience: 5,
+                  endorsements: [],
+                  verified: false,
+                },
+                {
+                  id: "4",
+                  name: "AWS",
+                  level: "intermediate",
+                  yearsOfExperience: 3,
+                  endorsements: [],
+                  verified: false,
+                },
+              ],
+              experience: [],
+              education: [],
+              certifications: [],
+              portfolio: [],
+              references: [],
+              profileViews: 189,
+              searchAppearances: 67,
+            },
+          },
+        ]
+
+        set({ suggestedUsers: mockSuggestedUsers })
+      },
+
+      loadFeaturedUsers: () => {
+        const mockFeaturedUsers: User[] = [
+          {
+            id: "user-6",
+            username: "alexwilson",
+            displayName: "Alex Wilson",
+            realName: "Alexandra Wilson",
+            email: "alex@example.com",
+            avatar: "https://picsum.photos/100/100?random=6",
+            bio: "Senior Engineering Manager at Google. Building scalable systems and leading high-performing teams.",
+            role: "employer",
+            verified: true,
+            premium: true,
+            online: true,
+            lastSeen: new Date().toISOString(),
+            profileComplete: 100,
+            createdAt: "2022-08-01T00:00:00Z",
+            updatedAt: new Date().toISOString(),
+            privacy: {
+              profilePublic: true,
+              showEmail: false,
+              showPhone: false,
+              allowMessages: "everyone",
+              showOnlineStatus: true,
+              showLastSeen: true,
+            },
+            employerProfile: {
+              companyName: "Google",
+              companySize: "10000+",
+              industry: "Technology",
+              website: "https://google.com",
+              description: "Organizing the world's information and making it universally accessible.",
+              culture: "Innovation, collaboration, and making a global impact.",
+              benefits: ["Health Insurance", "Stock Options", "Learning Budget", "Flexible Hours"],
+              locations: ["Mountain View, CA", "New York, NY", "Remote"],
+              foundedYear: 1998,
+              socialLinks: {
+                linkedin: "https://linkedin.com/company/google",
+                twitter: "https://twitter.com/google",
+              },
+              jobsPosted: 45,
+              successfulHires: 32,
+              responseRate: 98,
+              averageResponseTime: 2,
+            },
+          },
+          {
+            id: "user-7",
+            username: "emilydavis",
+            displayName: "Emily Davis",
+            realName: "Emily Davis",
+            email: "emily@example.com",
+            avatar: "https://picsum.photos/100/100?random=7",
+            bio: "UX Designer with a passion for creating intuitive and beautiful user experiences. 6 years in the industry.",
+            role: "job-seeker",
+            verified: true,
+            premium: false,
+            online: false,
+            lastSeen: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+            profileComplete: 92,
+            createdAt: "2023-01-20T00:00:00Z",
+            updatedAt: new Date().toISOString(),
+            privacy: {
+              profilePublic: true,
+              showEmail: false,
+              showPhone: false,
+              allowMessages: "everyone",
+              showOnlineStatus: true,
+              showLastSeen: true,
+            },
+            jobSeekerProfile: {
+              availability: "actively-looking",
+              salaryExpectation: { min: 75000, max: 105000, currency: "USD" },
+              preferredJobTypes: ["full-time"],
+              locationPreferences: {
+                remote: true,
+                onSite: false,
+                hybrid: true,
+                locations: ["Seattle, WA", "Portland, OR", "Remote"],
+              },
+              skills: [
+                { id: "1", name: "Figma", level: "expert", yearsOfExperience: 6, endorsements: [], verified: true },
+                {
+                  id: "2",
+                  name: "User Research",
+                  level: "advanced",
+                  yearsOfExperience: 5,
+                  endorsements: [],
+                  verified: true,
+                },
+                {
+                  id: "3",
+                  name: "Prototyping",
+                  level: "expert",
+                  yearsOfExperience: 6,
+                  endorsements: [],
+                  verified: false,
+                },
+              ],
+              experience: [],
+              education: [],
+              certifications: [],
+              portfolio: [
+                {
+                  id: "1",
+                  title: "Mobile Banking App Redesign",
+                  description: "Complete UX overhaul of a mobile banking application",
+                  type: "image",
+                  url: "https://picsum.photos/400/300?random=20",
+                  thumbnail: "https://picsum.photos/200/150?random=20",
+                  tags: ["UX Design", "Mobile", "Fintech"],
+                  createdAt: "2023-08-01T00:00:00Z",
+                },
+              ],
+              references: [],
+              profileViews: 312,
+              searchAppearances: 98,
+            },
+          },
+        ]
+
+        set({ featuredUsers: mockFeaturedUsers })
+      },
+    }),
+    {
+      name: "user-discovery-storage",
+      partialize: (state) => ({
+        recentSearches: state.recentSearches,
+        searchFilters: state.searchFilters,
+      }),
+    },
+  ),
+)
+
 // Job Store
 interface JobState {
   jobs: Job[]
   savedJobs: string[]
   appliedJobs: string[]
-  isLoading: boolean
-  searchQuery: string
-  filters: {
+  myJobs: Job[]
+  searchFilters: {
+    query: string
     location: string
-    type: string
-    salary: string
-    remote: boolean
-    experienceLevel: string
+    jobType: string[]
+    workType: string[]
+    experienceLevel: string[]
+    salaryMin?: number
+    salaryMax?: number
+    category: string
+    datePosted: string
+    sortBy: string
   }
-  fetchJobs: () => Promise<void>
-  searchJobs: (query: string) => Promise<void>
+
+  // Actions
+  setJobs: (jobs: Job[]) => void
+  addJob: (job: Job) => void
+  updateJob: (id: string, updates: Partial<Job>) => void
+  deleteJob: (id: string) => void
   saveJob: (jobId: string) => void
   unsaveJob: (jobId: string) => void
-  applyToJob: (jobId: string) => Promise<void>
-  setFilters: (filters: Partial<JobState["filters"]>) => void
-  setSearchQuery: (query: string) => void
+  applyToJob: (jobId: string) => void
+  setMyJobs: (jobs: Job[]) => void
+  updateSearchFilters: (filters: Partial<JobState["searchFilters"]>) => void
+  clearFilters: () => void
 }
 
 export const useJobStore = create<JobState>()(
@@ -159,334 +898,217 @@ export const useJobStore = create<JobState>()(
       jobs: [],
       savedJobs: [],
       appliedJobs: [],
-      isLoading: false,
-      searchQuery: "",
-      filters: {
+      myJobs: [],
+      searchFilters: {
+        query: "",
         location: "",
-        type: "",
-        salary: "",
-        remote: false,
-        experienceLevel: "",
+        jobType: [],
+        workType: [],
+        experienceLevel: [],
+        category: "",
+        datePosted: "all",
+        sortBy: "relevance",
       },
-      fetchJobs: async () => {
-        set({ isLoading: true })
-        try {
-          // Mock jobs data
-          const mockJobs: Job[] = [
-            {
-              id: "1",
-              title: "Senior Frontend Developer",
-              company: "TechCorp",
-              location: "San Francisco, CA",
-              type: "Full-time",
-              salary: "$120,000 - $150,000",
-              description: "We are looking for a senior frontend developer...",
-              requirements: ["React", "TypeScript", "5+ years experience"],
-              benefits: ["Health insurance", "Remote work", "401k"],
-              postedAt: "2024-01-15",
-              isRemote: true,
-              experienceLevel: "Senior",
-            },
-            {
-              id: "2",
-              title: "Product Manager",
-              company: "StartupXYZ",
-              location: "New York, NY",
-              type: "Full-time",
-              salary: "$100,000 - $130,000",
-              description: "Join our product team...",
-              requirements: ["Product management", "Agile", "3+ years experience"],
-              benefits: ["Equity", "Flexible hours", "Health insurance"],
-              postedAt: "2024-01-14",
-              isRemote: false,
-              experienceLevel: "Mid-level",
-            },
-          ]
-          set({ jobs: mockJobs, isLoading: false })
-        } catch (error) {
-          set({ isLoading: false })
-          throw error
-        }
-      },
-      searchJobs: async (query: string) => {
-        set({ searchQuery: query, isLoading: true })
-        // Mock search - filter existing jobs
-        const { jobs } = get()
-        const filteredJobs = jobs.filter(
-          (job) =>
-            job.title.toLowerCase().includes(query.toLowerCase()) ||
-            job.company.toLowerCase().includes(query.toLowerCase()),
-        )
-        set({ jobs: filteredJobs, isLoading: false })
-      },
-      saveJob: (jobId: string) => {
-        const { savedJobs } = get()
-        if (!savedJobs.includes(jobId)) {
-          set({ savedJobs: [...savedJobs, jobId] })
-        }
-      },
-      unsaveJob: (jobId: string) => {
-        const { savedJobs } = get()
-        set({ savedJobs: savedJobs.filter((id) => id !== jobId) })
-      },
-      applyToJob: async (jobId: string) => {
-        const { appliedJobs } = get()
-        if (!appliedJobs.includes(jobId)) {
-          set({ appliedJobs: [...appliedJobs, jobId] })
-        }
-      },
-      setFilters: (newFilters) => {
-        const { filters } = get()
-        set({ filters: { ...filters, ...newFilters } })
-      },
-      setSearchQuery: (query: string) => {
-        set({ searchQuery: query })
-      },
+
+      setJobs: (jobs) => set({ jobs }),
+      addJob: (job) => set((state) => ({ jobs: [...state.jobs, job] })),
+      updateJob: (id, updates) =>
+        set((state) => ({
+          jobs: state.jobs.map((job) => (job.id === id ? { ...job, ...updates } : job)),
+          myJobs: state.myJobs.map((job) => (job.id === id ? { ...job, ...updates } : job)),
+        })),
+      deleteJob: (id) =>
+        set((state) => ({
+          jobs: state.jobs.filter((job) => job.id !== id),
+          myJobs: state.myJobs.filter((job) => job.id !== id),
+        })),
+      saveJob: (jobId) =>
+        set((state) => ({
+          savedJobs: state.savedJobs.includes(jobId) ? state.savedJobs : [...state.savedJobs, jobId],
+        })),
+      unsaveJob: (jobId) =>
+        set((state) => ({
+          savedJobs: state.savedJobs.filter((id) => id !== jobId),
+        })),
+      applyToJob: (jobId) =>
+        set((state) => ({
+          appliedJobs: state.appliedJobs.includes(jobId) ? state.appliedJobs : [...state.appliedJobs, jobId],
+        })),
+      setMyJobs: (jobs) => set({ myJobs: jobs }),
+      updateSearchFilters: (filters) => set((state) => ({ searchFilters: { ...state.searchFilters, ...filters } })),
+      clearFilters: () =>
+        set({
+          searchFilters: {
+            query: "",
+            location: "",
+            jobType: [],
+            workType: [],
+            experienceLevel: [],
+            category: "",
+            datePosted: "all",
+            sortBy: "relevance",
+          },
+        }),
     }),
     {
       name: "job-storage",
       partialize: (state) => ({
         savedJobs: state.savedJobs,
         appliedJobs: state.appliedJobs,
-        filters: state.filters,
-        searchQuery: state.searchQuery,
+        searchFilters: state.searchFilters,
       }),
     },
   ),
 )
 
-// Notification Store
-interface NotificationState {
-  notifications: Notification[]
-  unreadCount: number
-  isLoading: boolean
-  fetchNotifications: () => Promise<void>
-  markAsRead: (notificationId: string) => void
-  markAllAsRead: () => void
-  addNotification: (notification: Omit<Notification, "id" | "createdAt">) => void
-  removeNotification: (notificationId: string) => void
+// UI Store
+interface UIState {
+  chatPanelOpen: boolean
+  searchModalOpen: boolean
+  notificationsPanelOpen: boolean
+  sidebarCollapsed: boolean
+  theme: "light" | "dark"
+
+  // Actions
+  setChatPanelOpen: (open: boolean) => void
+  setSearchModalOpen: (open: boolean) => void
+  setNotificationsPanelOpen: (open: boolean) => void
+  setSidebarCollapsed: (collapsed: boolean) => void
+  setTheme: (theme: "light" | "dark") => void
 }
 
-export const useNotificationStore = create<NotificationState>()(
+export const useUIStore = create<UIState>()(
+  persist(
+    (set) => ({
+      chatPanelOpen: false,
+      searchModalOpen: false,
+      notificationsPanelOpen: false,
+      sidebarCollapsed: false,
+      theme: "light",
+
+      setChatPanelOpen: (open) => set({ chatPanelOpen: open }),
+      setSearchModalOpen: (open) => set({ searchModalOpen: open }),
+      setNotificationsPanelOpen: (open) => set({ notificationsPanelOpen: open }),
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      setTheme: (theme) => set({ theme }),
+    }),
+    {
+      name: "ui-storage",
+    },
+  ),
+)
+
+// Notifications Store
+interface NotificationsState {
+  notifications: Notification[]
+  unreadCount: number
+
+  // Actions
+  addNotification: (notification: Omit<Notification, "id" | "createdAt">) => void
+  markAsRead: (notificationId: string) => void
+  markAllAsRead: () => void
+  deleteNotification: (notificationId: string) => void
+  clearAll: () => void
+}
+
+export const useNotificationsStore = create<NotificationsState>()(
   persist(
     (set, get) => ({
-      notifications: [],
-      unreadCount: 0,
-      isLoading: false,
-      fetchNotifications: async () => {
-        set({ isLoading: true })
-        try {
-          // Mock notifications
-          const mockNotifications: Notification[] = [
-            {
-              id: "1",
-              type: "job_match",
-              title: "New Job Match",
-              message: "A new job matching your profile is available",
-              read: false,
-              createdAt: new Date().toISOString(),
-              actionUrl: "/jobs/1",
-            },
-            {
-              id: "2",
-              type: "application_update",
-              title: "Application Update",
-              message: "Your application for Frontend Developer has been reviewed",
-              read: false,
-              createdAt: new Date(Date.now() - 3600000).toISOString(),
-              actionUrl: "/dashboard",
-            },
-          ]
-          const unreadCount = mockNotifications.filter((n) => !n.read).length
-          set({ notifications: mockNotifications, unreadCount, isLoading: false })
-        } catch (error) {
-          set({ isLoading: false })
-          throw error
-        }
-      },
-      markAsRead: (notificationId: string) => {
-        const { notifications } = get()
-        const updatedNotifications = notifications.map((notification) =>
-          notification.id === notificationId ? { ...notification, read: true } : notification,
-        )
-        const unreadCount = updatedNotifications.filter((n) => !n.read).length
-        set({ notifications: updatedNotifications, unreadCount })
-      },
-      markAllAsRead: () => {
-        const { notifications } = get()
-        const updatedNotifications = notifications.map((notification) => ({
-          ...notification,
+      notifications: [
+        {
+          id: "notif-1",
+          userId: "user-1",
+          type: "message",
+          title: "New message from Sarah Chen",
+          message: "Hi! I saw your profile and I'm interested in discussing a frontend position...",
+          data: { conversationId: "conv-1", senderId: "user-2" },
+          read: false,
+          actionUrl: "/messages/conv-1",
+          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        },
+        {
+          id: "notif-2",
+          userId: "user-1",
+          type: "connection",
+          title: "New connection request",
+          message: "Mike Johnson wants to connect with you",
+          data: { userId: "user-5" },
+          read: false,
+          actionUrl: "/profile/mikejohnson",
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        },
+        {
+          id: "notif-3",
+          userId: "user-1",
+          type: "job-match",
+          title: "New job match",
+          message: "Senior React Developer at TechCorp matches your profile",
+          data: { jobId: "job-3" },
           read: true,
-        }))
-        set({ notifications: updatedNotifications, unreadCount: 0 })
-      },
-      addNotification: (notificationData) => {
-        const { notifications } = get()
+          actionUrl: "/jobs/job-3",
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+        },
+      ],
+      unreadCount: 2,
+
+      addNotification: (notification) => {
         const newNotification: Notification = {
-          ...notificationData,
-          id: Date.now().toString(),
+          ...notification,
+          id: `notif-${Date.now()}`,
           createdAt: new Date().toISOString(),
         }
-        const updatedNotifications = [newNotification, ...notifications]
-        const unreadCount = updatedNotifications.filter((n) => !n.read).length
-        set({ notifications: updatedNotifications, unreadCount })
-      },
-      removeNotification: (notificationId: string) => {
+
         const { notifications } = get()
+        set({
+          notifications: [newNotification, ...notifications],
+          unreadCount: get().unreadCount + 1,
+        })
+      },
+
+      markAsRead: (notificationId) => {
+        const { notifications } = get()
+        const notification = notifications.find((n) => n.id === notificationId)
+
+        if (notification && !notification.read) {
+          const updatedNotifications = notifications.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+
+          set({
+            notifications: updatedNotifications,
+            unreadCount: get().unreadCount - 1,
+          })
+        }
+      },
+
+      markAllAsRead: () => {
+        const { notifications } = get()
+        const updatedNotifications = notifications.map((n) => ({ ...n, read: true }))
+
+        set({
+          notifications: updatedNotifications,
+          unreadCount: 0,
+        })
+      },
+
+      deleteNotification: (notificationId) => {
+        const { notifications } = get()
+        const notification = notifications.find((n) => n.id === notificationId)
         const updatedNotifications = notifications.filter((n) => n.id !== notificationId)
-        const unreadCount = updatedNotifications.filter((n) => !n.read).length
-        set({ notifications: updatedNotifications, unreadCount })
+
+        set({
+          notifications: updatedNotifications,
+          unreadCount: notification && !notification.read ? get().unreadCount - 1 : get().unreadCount,
+        })
+      },
+
+      clearAll: () => {
+        set({ notifications: [], unreadCount: 0 })
       },
     }),
     {
-      name: "notification-storage",
-      partialize: (state) => ({
-        notifications: state.notifications,
-        unreadCount: state.unreadCount,
-      }),
+      name: "notifications-storage",
     },
   ),
 )
 
-// Messaging Store
-interface MessagingState {
-  conversations: Conversation[]
-  messages: { [conversationId: string]: Message[] }
-  activeConversation: string | null
-  isLoading: boolean
-  fetchConversations: () => Promise<void>
-  fetchMessages: (conversationId: string) => Promise<void>
-  sendMessage: (conversationId: string, content: string, type?: Message["type"]) => Promise<void>
-  markMessagesAsRead: (conversationId: string) => void
-  setActiveConversation: (conversationId: string | null) => void
-  startConversation: (userId: string) => Promise<string>
-}
-
-export const useMessagingStore = create<MessagingState>()((set, get) => ({
-  conversations: [],
-  messages: {},
-  activeConversation: null,
-  isLoading: false,
-  fetchConversations: async () => {
-    set({ isLoading: true })
-    try {
-      // Mock conversations
-      const mockConversations: Conversation[] = [
-        {
-          id: "1",
-          participants: [
-            { id: "1", name: "John Doe", email: "john@example.com", role: "jobseeker" },
-            { id: "2", name: "Jane Smith", email: "jane@example.com", role: "employer" },
-          ],
-          lastMessage: {
-            id: "1",
-            senderId: "2",
-            receiverId: "1",
-            content: "Thanks for your application!",
-            timestamp: new Date().toISOString(),
-            read: false,
-            type: "text",
-          },
-          unreadCount: 1,
-          updatedAt: new Date().toISOString(),
-        },
-      ]
-      set({ conversations: mockConversations, isLoading: false })
-    } catch (error) {
-      set({ isLoading: false })
-      throw error
-    }
-  },
-  fetchMessages: async (conversationId: string) => {
-    const { messages } = get()
-    if (messages[conversationId]) return
-
-    try {
-      // Mock messages
-      const mockMessages: Message[] = [
-        {
-          id: "1",
-          senderId: "2",
-          receiverId: "1",
-          content: "Hi! I saw your application for the Frontend Developer position.",
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          read: true,
-          type: "text",
-        },
-        {
-          id: "2",
-          senderId: "1",
-          receiverId: "2",
-          content: "Thank you for reaching out! I'm very interested in the position.",
-          timestamp: new Date(Date.now() - 1800000).toISOString(),
-          read: true,
-          type: "text",
-        },
-        {
-          id: "3",
-          senderId: "2",
-          receiverId: "1",
-          content: "Thanks for your application!",
-          timestamp: new Date().toISOString(),
-          read: false,
-          type: "text",
-        },
-      ]
-      set({ messages: { ...messages, [conversationId]: mockMessages } })
-    } catch (error) {
-      throw error
-    }
-  },
-  sendMessage: async (conversationId: string, content: string, type = "text") => {
-    const { messages } = get()
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      senderId: "1", // Current user
-      receiverId: "2", // Other participant
-      content,
-      timestamp: new Date().toISOString(),
-      read: false,
-      type,
-    }
-
-    const conversationMessages = messages[conversationId] || []
-    set({
-      messages: {
-        ...messages,
-        [conversationId]: [...conversationMessages, newMessage],
-      },
-    })
-  },
-  markMessagesAsRead: (conversationId: string) => {
-    const { messages, conversations } = get()
-    const conversationMessages = messages[conversationId] || []
-    const updatedMessages = conversationMessages.map((msg) => ({ ...msg, read: true }))
-    const updatedConversations = conversations.map((conv) =>
-      conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv,
-    )
-
-    set({
-      messages: { ...messages, [conversationId]: updatedMessages },
-      conversations: updatedConversations,
-    })
-  },
-  setActiveConversation: (conversationId: string | null) => {
-    set({ activeConversation: conversationId })
-  },
-  startConversation: async (userId: string) => {
-    const conversationId = `conv_${Date.now()}`
-    const newConversation: Conversation = {
-      id: conversationId,
-      participants: [
-        { id: "1", name: "Current User", email: "current@example.com", role: "jobseeker" },
-        { id: userId, name: "Other User", email: "other@example.com", role: "employer" },
-      ],
-      unreadCount: 0,
-      updatedAt: new Date().toISOString(),
-    }
-
-    const { conversations } = get()
-    set({ conversations: [...conversations, newConversation] })
-    return conversationId
-  },
-}))
+// Alias for useNotificationsStore to fix the export name issue
+export const useNotificationStore = useNotificationsStore

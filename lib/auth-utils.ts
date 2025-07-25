@@ -1,4 +1,11 @@
 import { z } from "zod"
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+// Utility function for combining class names
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
 // Auth error constants
 export const AUTH_ERRORS = {
@@ -14,6 +21,71 @@ export const AUTH_ERRORS = {
   NETWORK_ERROR: "Network error, please check your connection",
   SERVER_ERROR: "Server error, please try again later",
 } as const
+
+// Password strength calculation
+export interface PasswordStrength {
+  score: number
+  feedback: string[]
+  color: string
+  label: string
+}
+
+export const calculatePasswordStrength = (password: string): PasswordStrength => {
+  let score = 0
+  const feedback: string[] = []
+
+  if (password.length < 8) {
+    feedback.push("Use at least 8 characters")
+  } else {
+    score += 1
+  }
+
+  if (!/[a-z]/.test(password)) {
+    feedback.push("Add lowercase letters")
+  } else {
+    score += 1
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    feedback.push("Add uppercase letters")
+  } else {
+    score += 1
+  }
+
+  if (!/\d/.test(password)) {
+    feedback.push("Add numbers")
+  } else {
+    score += 1
+  }
+
+  if (!/[@$!%*?&]/.test(password)) {
+    feedback.push("Add special characters (@$!%*?&)")
+  } else {
+    score += 1
+  }
+
+  if (password.length >= 12) {
+    score += 1
+  }
+
+  let color = "bg-red-500"
+  let label = "Weak"
+
+  if (score >= 4) {
+    color = "bg-yellow-500"
+    label = "Fair"
+  }
+  if (score >= 5) {
+    color = "bg-green-500"
+    label = "Good"
+  }
+  if (score >= 6) {
+    color = "bg-green-600"
+    label = "Strong"
+  }
+
+  return { score, feedback, color, label }
+}
 
 // Validation schemas
 export const loginSchema = z.object({
@@ -127,6 +199,26 @@ export function generateOTP(length = 6): string {
     result += digits.charAt(Math.floor(Math.random() * digits.length))
   }
   return result
+}
+
+// Validate file upload
+export const validateFileUpload = (file: File): { valid: boolean; error?: string } => {
+  const maxSize = 5 * 1024 * 1024 // 5MB
+  const allowedTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ]
+
+  if (file.size > maxSize) {
+    return { valid: false, error: "File size must be less than 5MB" }
+  }
+
+  if (!allowedTypes.includes(file.type)) {
+    return { valid: false, error: "Only PDF, DOC, and DOCX files are allowed" }
+  }
+
+  return { valid: true }
 }
 
 // Password utilities
@@ -284,35 +376,4 @@ export async function mockRegister(userData: {
       role: userData.role,
     },
   }
-}
-
-export async function mockForgotPassword(email: string): Promise<{
-  success: boolean
-  error?: string
-}> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  return { success: true }
-}
-
-export async function mockResetPassword(
-  token: string,
-  password: string,
-): Promise<{
-  success: boolean
-  error?: string
-}> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  // Mock token validation
-  if (token.length < 10) {
-    return {
-      success: false,
-      error: AUTH_ERRORS.TOKEN_EXPIRED,
-    }
-  }
-
-  return { success: true }
 }
