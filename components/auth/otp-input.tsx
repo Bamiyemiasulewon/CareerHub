@@ -1,179 +1,234 @@
 "use client"
 
-import type React from "react"
 import { useState, useRef, useEffect, type KeyboardEvent, type ClipboardEvent } from "react"
-import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/auth-utils"
 
-interface OTPInputProps {
+interface OtpInputProps {
   length?: number
-  onComplete?: (otp: string) => void
-  autoFocus?: boolean
-  disabled?: boolean
   value?: string
-  onChange?: (otp: string) => void
+  onChange?: (value: string) => void
+  onComplete?: (value: string) => void
+  disabled?: boolean
+  error?: boolean
+  className?: string
   inputClassName?: string
-  containerClassName?: string
-  isError?: boolean
+  autoFocus?: boolean
 }
 
-export const OtpInput = ({
+export function OtpInput({
   length = 6,
-  onComplete,
-  autoFocus = true,
-  disabled = false,
   value = "",
   onChange,
+  onComplete,
+  disabled = false,
+  error = false,
+  className,
   inputClassName,
-  containerClassName,
-  isError = false,
-}: OTPInputProps) => {
-  const [otp, setOtp] = useState<string[]>(
-    value.split("").slice(0, length).concat(Array(length).fill("")).slice(0, length),
-  )
+  autoFocus = true,
+}: OtpInputProps) {
+  const [otp, setOtp] = useState<string[]>(Array(length).fill(""))
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
+  // Initialize refs array
+  useEffect(() => {
+    inputRefs.current = inputRefs.current.slice(0, length)
+  }, [length])
+
+  // Update internal state when value prop changes
+  useEffect(() => {
+    if (value !== otp.join("")) {
+      const newOtp = value.split("").slice(0, length)
+      while (newOtp.length < length) {
+        newOtp.push("")
+      }
+      setOtp(newOtp)
+    }
+  }, [value, length, otp])
+
+  // Auto-focus first input
   useEffect(() => {
     if (autoFocus && inputRefs.current[0]) {
       inputRefs.current[0].focus()
     }
   }, [autoFocus])
 
-  useEffect(() => {
-    const newOtp = value.split("").slice(0, length).concat(Array(length).fill("")).slice(0, length)
+  const handleChange = (index: number, digit: string) => {
+    // Only allow single digits
+    if (digit.length > 1) {
+      digit = digit.slice(-1)
+    }
+
+    // Only allow numbers
+    if (digit && !/^\d$/.test(digit)) {
+      return
+    }
+
+    const newOtp = [...otp]
+    newOtp[index] = digit
     setOtp(newOtp)
-  }, [value, length])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const newValue = e.target.value
-    if (newValue === "" || /^\d$/.test(newValue)) {
-      const newOtp = [...otp]
-      newOtp[index] = newValue
-      setOtp(newOtp)
+    const otpValue = newOtp.join("")
+    onChange?.(otpValue)
 
-      if (onChange) {
-        onChange(newOtp.join(""))
-      }
+    // Auto-focus next input
+    if (digit && index < length - 1) {
+      inputRefs.current[index + 1]?.focus()
+    }
 
-      // Auto-focus next input if value is entered
-      if (newValue !== "" && index < length - 1 && inputRefs.current[index + 1]) {
-        inputRefs.current[index + 1].focus()
-      }
-
-      // Check if OTP is complete
-      const otpValue = newOtp.join("")
-      if (otpValue.length === length && !otpValue.includes("") && onComplete) {
-        onComplete(otpValue)
-      }
+    // Call onComplete when all digits are filled
+    if (otpValue.length === length && !otpValue.includes("")) {
+      onComplete?.(otpValue)
     }
   }
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === "Backspace" && otp[index] === "" && index > 0 && inputRefs.current[index - 1]) {
-      // Move to previous input on backspace if current is empty
-      inputRefs.current[index - 1].focus()
-    } else if (e.key === "ArrowLeft" && index > 0 && inputRefs.current[index - 1]) {
-      // Move to previous input on left arrow
-      inputRefs.current[index - 1].focus()
-    } else if (e.key === "ArrowRight" && index < length - 1 && inputRefs.current[index + 1]) {
-      // Move to next input on right arrow
-      inputRefs.current[index + 1].focus()
+  const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace") {
+      e.preventDefault()
+      const newOtp = [...otp]
+
+      if (newOtp[index]) {
+        // Clear current input
+        newOtp[index] = ""
+        setOtp(newOtp)
+        onChange?.(newOtp.join(""))
+      } else if (index > 0) {
+        // Move to previous input and clear it
+        newOtp[index - 1] = ""
+        setOtp(newOtp)
+        onChange?.(newOtp.join(""))
+        inputRefs.current[index - 1]?.focus()
+      }
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      inputRefs.current[index - 1]?.focus()
+    } else if (e.key === "ArrowRight" && index < length - 1) {
+      inputRefs.current[index + 1]?.focus()
+    } else if (e.key === "Delete") {
+      e.preventDefault()
+      const newOtp = [...otp]
+      newOtp[index] = ""
+      setOtp(newOtp)
+      onChange?.(newOtp.join(""))
     }
   }
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault()
-    const pastedData = e.clipboardData.getData("text/plain").trim()
+    const pastedData = e.clipboardData.getData("text/plain").replace(/\D/g, "")
 
-    if (!/^\d+$/.test(pastedData)) return
+    if (pastedData) {
+      const newOtp = [...otp]
+      const startIndex = inputRefs.current.findIndex((ref) => ref === e.target)
 
-    const newOtp = [...otp]
-    for (let i = 0; i < Math.min(length, pastedData.length); i++) {
-      newOtp[i] = pastedData[i]
-    }
+      for (let i = 0; i < Math.min(pastedData.length, length - startIndex); i++) {
+        newOtp[startIndex + i] = pastedData[i]
+      }
 
-    setOtp(newOtp)
+      setOtp(newOtp)
+      onChange?.(newOtp.join(""))
 
-    if (onChange) {
-      onChange(newOtp.join(""))
-    }
+      // Focus the next empty input or the last input
+      const nextEmptyIndex = newOtp.findIndex((digit, idx) => idx > startIndex && !digit)
+      const focusIndex = nextEmptyIndex !== -1 ? nextEmptyIndex : Math.min(startIndex + pastedData.length, length - 1)
+      inputRefs.current[focusIndex]?.focus()
 
-    // Focus the next empty input or the last one
-    const nextEmptyIndex = newOtp.findIndex((val) => val === "")
-    const focusIndex = nextEmptyIndex === -1 ? length - 1 : nextEmptyIndex
-    if (inputRefs.current[focusIndex]) {
-      inputRefs.current[focusIndex].focus()
-    }
-
-    // Check if OTP is complete
-    const otpValue = newOtp.join("")
-    if (otpValue.length === length && !otpValue.includes("") && onComplete) {
-      onComplete(otpValue)
+      // Call onComplete if all digits are filled
+      const otpValue = newOtp.join("")
+      if (otpValue.length === length && !otpValue.includes("")) {
+        onComplete?.(otpValue)
+      }
     }
   }
 
+  const handleFocus = (index: number) => {
+    // Select all text when focusing
+    inputRefs.current[index]?.select()
+  }
+
   return (
-    <div className={cn("flex gap-2 items-center justify-center", containerClassName)}>
-      {Array.from({ length }).map((_, index) => (
-        <input
+    <div className={cn("flex gap-2 justify-center", className)}>
+      {otp.map((digit, index) => (
+        <Input
           key={index}
-          ref={(ref) => (inputRefs.current[index] = ref)}
+          ref={(el) => (inputRefs.current[index] = el)}
           type="text"
           inputMode="numeric"
+          pattern="\d*"
           maxLength={1}
-          value={otp[index] || ""}
-          onChange={(e) => handleChange(e, index)}
-          onKeyDown={(e) => handleKeyDown(e, index)}
-          onPaste={index === 0 ? handlePaste : undefined}
+          value={digit}
+          onChange={(e) => handleChange(index, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(index, e)}
+          onPaste={handlePaste}
+          onFocus={() => handleFocus(index)}
           disabled={disabled}
           className={cn(
-            "w-10 h-12 text-center text-lg font-semibold border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-1",
-            isError ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500",
-            disabled && "bg-gray-100 cursor-not-allowed opacity-70",
+            "w-12 h-12 text-center text-lg font-semibold",
+            "border-2 rounded-lg",
+            "focus:border-primary focus:ring-2 focus:ring-primary/20",
+            error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+            disabled && "opacity-50 cursor-not-allowed",
             inputClassName,
           )}
-          aria-label={`OTP digit ${index + 1}`}
+          aria-label={`Digit ${index + 1}`}
         />
       ))}
     </div>
   )
 }
 
-// Alias for OtpInput to fix the export name issue
-export const OTPInput = OtpInput
+// Enhanced version with verification handling
+interface VerificationCodeInputProps extends OtpInputProps {
+  isVerifying?: boolean
+  onResend?: () => void
+  resendDisabled?: boolean
+  resendCountdown?: number
+  title?: string
+  description?: string
+  errorMessage?: string
+}
 
-// Enhanced version with verification functionality
-export const VerificationCodeInput = ({
-  length = 6,
-  onVerify,
-  isLoading = false,
-  error = "",
-  ...props
-}: OTPInputProps & {
-  onVerify?: (code: string) => void
-  isLoading?: boolean
-  error?: string
-}) => {
-  const [code, setCode] = useState("")
-
-  const handleComplete = (otp: string) => {
-    setCode(otp)
-    if (onVerify) {
-      onVerify(otp)
-    }
-  }
-
+export function VerificationCodeInput({
+  isVerifying = false,
+  onResend,
+  resendDisabled = false,
+  resendCountdown = 0,
+  title = "Enter verification code",
+  description = "We've sent a 6-digit code to your email",
+  errorMessage,
+  ...otpProps
+}: VerificationCodeInputProps) {
   return (
-    <div className="space-y-4">
-      <OtpInput
-        length={length}
-        onComplete={handleComplete}
-        onChange={setCode}
-        value={code}
-        disabled={isLoading}
-        isError={!!error}
-        {...props}
-      />
-      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
+        <p className="text-gray-600">{description}</p>
+      </div>
+
+      <div className="space-y-4">
+        <OtpInput {...otpProps} disabled={otpProps.disabled || isVerifying} error={!!errorMessage} />
+
+        {errorMessage && <p className="text-sm text-red-600 text-center">{errorMessage}</p>}
+
+        {isVerifying && <p className="text-sm text-gray-600 text-center">Verifying code...</p>}
+      </div>
+
+      {onResend && (
+        <div className="text-center">
+          <p className="text-sm text-gray-600 mb-2">Didn't receive the code?</p>
+          <Button
+            variant="ghost"
+            onClick={onResend}
+            disabled={resendDisabled || isVerifying}
+            className="text-primary hover:text-primary/80"
+          >
+            {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend code"}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
+
+// Export alias for backward compatibility
+export const OTPInput = OtpInput
