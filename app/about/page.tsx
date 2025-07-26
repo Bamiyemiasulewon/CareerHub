@@ -6,13 +6,13 @@ import Image from "next/image"
 
 const teamMembers = [
   {
-    name: "Sarah Johnson",
+    name: "Asulewon Bamiyemi",
     role: "CEO & Founder",
     bio: "Former VP of Engineering at TechGiant with 15+ years in the industry.",
     image: "/placeholder.svg?height=200&width=200",
   },
   {
-    name: "Michael Chen",
+    name: "Totdking",
     role: "CTO",
     bio: "Ex-Google engineer passionate about building scalable platforms.",
     image: "/placeholder.svg?height=200&width=200",
