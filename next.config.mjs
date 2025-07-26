@@ -12,7 +12,7 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled due to critters dependency issues
   },
   compress: true,
   poweredByHeader: false,
