@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -134,6 +134,23 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [location, setLocation] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const mobileNavRef = useRef(null)
+
+  // Close mobile nav when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (mobileNavRef.current && !(mobileNavRef.current as any).contains(event.target)) {
+        setMobileNavOpen(false)
+      }
+    }
+    if (mobileNavOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [mobileNavOpen])
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -151,167 +168,132 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b bg-white sticky top-0 z-50 backdrop-blur-sm bg-white/95">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-3">
-              <Image
-                src="/images/careerhub-logo.png"
-                alt="CareerHub Logo"
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
-              <span className="text-2xl font-bold text-primary">CareerHub</span>
-            </Link>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/jobs" className="text-gray-600 hover:text-primary transition-colors">
-                Jobs
-              </Link>
-              <Link href="/companies" className="text-gray-600 hover:text-primary transition-colors">
-                Companies
-              </Link>
-              <Link href="/about" className="text-gray-600 hover:text-primary transition-colors">
-                About
-              </Link>
-              <Link href="/contact" className="text-gray-600 hover:text-primary transition-colors">
-                Contact
-              </Link>
-            </nav>
-            <div className="flex items-center space-x-4">
-              <Link href="/auth/login">
-                <Button variant="outline">Sign In</Button>
-              </Link>
-              <Link href="/post-job">
-                <Button>Post a Job</Button>
-              </Link>
+      {/* HEADER SECTION */}
+      <header className="w-full bg-white shadow-md fixed top-0 left-0 z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-3">
+            <Image
+              src="/images/careerhub-logo.png"
+              alt="CareerHub Logo"
+              width={32}
+              height={32}
+              className="rounded-full"
+            />
+            <span className="text-2xl font-bold text-gray-900 font-sans">CareerHub</span>
+          </Link>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6 font-sans">
+            <div className="relative group">
+              <button className="font-medium flex items-center">Portfolio <ChevronDown className="ml-1 h-4 w-4" /></button>
+              <div className="absolute left-0 mt-2 w-40 bg-white shadow-lg rounded hidden group-hover:block z-30">
+                <Link href="/portfolio/jobs" className="block px-4 py-2 hover:bg-gray-100">Jobs</Link>
+                <Link href="/portfolio/professionals" className="block px-4 py-2 hover:bg-gray-100">Professionals</Link>
+                <Link href="/portfolio/companies" className="block px-4 py-2 hover:bg-gray-100">Companies</Link>
+              </div>
             </div>
+            <Link href="/post-job" className="hover:text-blue-600">Post A Job</Link>
+            <Link href="/hire" className="hover:text-blue-600">Hire A Professional</Link>
+          </nav>
+          {/* Mobile Hamburger */}
+          <button
+            className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Open navigation menu"
+            onClick={() => setMobileNavOpen((open) => !open)}
+          >
+            <svg className="h-7 w-7 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          {/* Auth/Profile (always visible) */}
+          <div className="flex items-center space-x-2">
+            <Link href="/auth/login" className="px-4 py-2 rounded hover:bg-gray-100 font-sans">Log In</Link>
+            <Link href="/signup" className="px-4 py-2 rounded bg-black text-white hover:bg-gray-800 font-sans">Sign Up</Link>
           </div>
         </div>
+        {/* Mobile Nav Drawer */}
+        {mobileNavOpen && (
+          <div ref={mobileNavRef} className="md:hidden fixed inset-0 z-40 bg-black bg-opacity-40 flex">
+            <nav className="bg-white w-64 h-full shadow-lg p-6 flex flex-col space-y-4 animate-slide-in">
+              <button
+                className="self-end mb-4 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Close navigation menu"
+                onClick={() => setMobileNavOpen(false)}
+              >
+                <svg className="h-6 w-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <div className="font-sans">
+                <div className="mb-2 font-medium">Portfolio</div>
+                <Link href="/portfolio/jobs" className="block px-2 py-2 rounded hover:bg-gray-100" onClick={() => setMobileNavOpen(false)}>Jobs</Link>
+                <Link href="/portfolio/professionals" className="block px-2 py-2 rounded hover:bg-gray-100" onClick={() => setMobileNavOpen(false)}>Professionals</Link>
+                <Link href="/portfolio/companies" className="block px-2 py-2 rounded hover:bg-gray-100" onClick={() => setMobileNavOpen(false)}>Companies</Link>
+                <Link href="/post-job" className="block px-2 py-2 rounded hover:bg-gray-100" onClick={() => setMobileNavOpen(false)}>Post A Job</Link>
+                <Link href="/hire" className="block px-2 py-2 rounded hover:bg-gray-100" onClick={() => setMobileNavOpen(false)}>Hire A Professional</Link>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-white py-20 relative overflow-hidden">
-        {/* Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-20 w-32 h-32 bg-blue-100 rounded-full blur-3xl opacity-60"></div>
-          <div className="absolute bottom-40 right-20 w-40 h-40 bg-purple-100 rounded-full blur-3xl opacity-60"></div>
-          <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-indigo-100 rounded-full blur-3xl opacity-60"></div>
-        </div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="mb-8">
-              <Badge variant="secondary" className="mb-6 bg-blue-50 text-blue-700 border-blue-200">
-                🎉 Over 50,000 professionals trust CareerHub
-              </Badge>
-              <h1 className="text-5xl md:text-6xl font-bold mb-6">
-                <span className="bg-gradient-to-r from-gray-900 via-blue-800 to-gray-900 bg-clip-text text-transparent">
-                  Find Your Dream Job
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Today
-                </span>
-              </h1>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Connect with top employers and discover opportunities that match your skills and aspirations. Your next
-                career move is just a search away.
-              </p>
-            </div>
-
-            {/* Search Bar */}
-            <div className="bg-gray-50 rounded-2xl p-6 shadow-lg max-w-4xl mx-auto mb-8 relative">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-4 h-5 w-5 text-gray-400" />
-                  <Input
-                    placeholder="Job title, keywords, or company"
-                    className="pl-12 h-12 bg-white border-gray-200 text-lg"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    onFocus={() => setShowSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  />
-                </div>
-                <div className="flex-1 relative">
-                  <MapPin className="absolute left-4 top-4 h-5 w-5 text-gray-400" />
-                  <Input
-                    placeholder="City, state, or remote"
-                    className="pl-12 h-12 bg-white border-gray-200 text-lg"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                  />
-                </div>
-                <Button
-                  onClick={handleSearch}
-                  className="h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg font-semibold"
-                >
-                  Search Jobs
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </div>
-
-              {/* Search Suggestions */}
-              {showSuggestions && (
-                <div className="absolute top-full left-6 right-6 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
-                  <div className="p-4">
-                    <p className="text-sm font-medium text-gray-700 mb-3">Popular Searches</p>
-                    <div className="flex flex-wrap gap-2">
-                      {popularSearches.map((search, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            setSearchQuery(search)
-                            setShowSuggestions(false)
-                          }}
-                          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-                        >
-                          {search}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap justify-center items-center gap-8 text-gray-600">
-              <div className="flex items-center space-x-2">
-                <Users className="h-5 w-5" />
-                <span className="text-sm">50,000+ Active Users</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Building className="h-5 w-5" />
-                <span className="text-sm">10,000+ Companies</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Briefcase className="h-5 w-5" />
-                <span className="text-sm">25,000+ Job Postings</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Scroll Indicator */}
-          <div className="flex justify-center mt-12">
-            <div className="animate-bounce">
-              <ChevronDown className="h-6 w-6 text-gray-400" />
-            </div>
-          </div>
+      {/* HERO SECTION */}
+      <section className="flex flex-col justify-center items-center min-h-[80vh] pt-32 pb-12 bg-gradient-to-br from-purple-200 via-blue-100 to-blue-300">
+        <h1 className="text-4xl md:text-6xl font-extrabold text-center mb-4 font-sans">
+          Revolutionizing Career Hiring – Skill Over Identity
+        </h1>
+        <p className="text-lg md:text-2xl text-center mb-8 max-w-2xl font-sans">
+          A global job board where professionals are hired based on their portfolio, not personal details.
+        </p>
+        {/* Search Bar */}
+        <form
+          className="flex flex-col md:flex-row items-center bg-white rounded-full shadow-lg px-4 py-2 w-full max-w-2xl mb-4"
+          onSubmit={e => { e.preventDefault(); handleSearch(); }}
+        >
+          <input
+            type="text"
+            placeholder="What Are You Looking For?"
+            className="flex-1 px-4 py-2 rounded-full outline-none text-base font-sans"
+            aria-label="Search"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            onKeyPress={handleKeyPress}
+          />
+          <select className="mx-2 px-3 py-2 rounded-full bg-gray-100 text-base outline-none font-sans">
+            <option>Jobs</option>
+            <option>Professionals</option>
+            <option>Companies</option>
+          </select>
+          <button
+            type="submit"
+            className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-4 py-2 flex items-center transition font-sans"
+            aria-label="Search"
+          >
+            <Search className="h-5 w-5 mr-1" />
+            Search
+          </button>
+        </form>
+        {/* Search Tags */}
+        <div className="flex flex-wrap justify-center gap-2 mb-4">
+          {popularSearches.map((search, index) => (
+            <button
+              key={index}
+              onClick={() => setSearchQuery(search)}
+              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors font-sans"
+            >
+              {search}
+            </button>
+          ))}
         </div>
       </section>
 
-      {/* Company Logos */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <p className="text-gray-600 font-medium">Trusted by leading companies worldwide</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center">
+      {/* TRUST SECTION */}
+      <section className="bg-white py-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-gray-600 mb-6 text-lg font-medium font-sans">
+            Trusted by professionals from leading organizations
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-8">
             {companies.map((company, index) => (
               <div key={index} className="flex flex-col items-center group">
                 <Image
@@ -321,7 +303,7 @@ export default function HomePage() {
                   height={40}
                   className="grayscale hover:grayscale-0 transition-all duration-300 group-hover:scale-105"
                 />
-                <p className="text-sm text-gray-500 mt-2">{company.jobs} jobs</p>
+                <p className="text-sm text-gray-500 mt-2 font-sans">{company.name}</p>
               </div>
             ))}
           </div>
