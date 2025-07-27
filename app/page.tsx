@@ -20,8 +20,6 @@ import {
   Target,
   Zap,
   ChevronDown,
-  Menu,
-  X,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -136,31 +134,8 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [location, setLocation] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [portfolioDropdownOpen, setPortfolioDropdownOpen] = useState(false)
-  const mobileNavRef = useRef(null)
 
-  // Close mobile nav when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (mobileNavRef.current && !(mobileNavRef.current as any).contains(event.target)) {
-        setMobileNavOpen(false)
-        setPortfolioDropdownOpen(false)
-      }
-    }
-    if (mobileNavOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
-      // Prevent body scroll when menu is open
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.body.style.overflow = 'unset'
-    }
-  }, [mobileNavOpen])
+
 
   const handleSearch = () => {
     const params = new URLSearchParams()
@@ -176,10 +151,7 @@ export default function HomePage() {
     }
   }
 
-  const closeMobileMenu = () => {
-    setMobileNavOpen(false)
-    setPortfolioDropdownOpen(false)
-  }
+
 
   return (
     <div className="min-h-screen bg-white">
@@ -214,14 +186,7 @@ export default function HomePage() {
             <Link href="/hire" className="hover:text-blue-600 min-h-[44px] flex items-center px-2 rounded hover:bg-gray-100 transition-colors">Hire A Professional</Link>
           </nav>
 
-          {/* Mobile Hamburger - Larger touch target */}
-          <button
-            className="lg:hidden p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 active:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Open navigation menu"
-            onClick={() => setMobileNavOpen((open) => !open)}
-          >
-            <Menu className="h-6 w-6 text-gray-700" />
-          </button>
+
 
           {/* Auth/Profile - Responsive layout */}
           <div className="flex items-center space-x-2">
@@ -240,87 +205,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Mobile Nav Drawer - Full screen overlay */}
-        {mobileNavOpen && (
-          <div ref={mobileNavRef} className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex">
-            <nav className="bg-white w-80 h-full shadow-xl flex flex-col animate-slide-in-right">
-              {/* Header with close button */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <span className="text-xl font-bold text-gray-900">Menu</span>
-                <button
-                  className="p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 active:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                  aria-label="Close navigation menu"
-                  onClick={closeMobileMenu}
-                >
-                  <X className="h-6 w-6 text-gray-700" />
-                </button>
-              </div>
 
-              {/* Navigation Links */}
-              <div className="flex-1 p-6 space-y-4">
-                {/* Portfolio Section */}
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setPortfolioDropdownOpen(!portfolioDropdownOpen)}
-                    className="w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-100 transition-colors text-left font-medium min-h-[44px]"
-                  >
-                    <span>Portfolio</span>
-                    <ChevronDown className={`h-5 w-5 transition-transform ${portfolioDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  
-                  {portfolioDropdownOpen && (
-                    <div className="ml-4 space-y-2 animate-slide-down">
-                      <Link 
-                        href="/portfolio/jobs" 
-                        className="block p-3 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] flex items-center"
-                        onClick={closeMobileMenu}
-                      >
-                        Jobs
-                      </Link>
-                      <Link 
-                        href="/portfolio/professionals" 
-                        className="block p-3 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] flex items-center"
-                        onClick={closeMobileMenu}
-                      >
-                        Professionals
-                      </Link>
-                      <Link 
-                        href="/portfolio/companies" 
-                        className="block p-3 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] flex items-center"
-                        onClick={closeMobileMenu}
-                      >
-                        Companies
-                      </Link>
-                    </div>
-                  )}
-                </div>
-
-                <Link 
-                  href="/post-job" 
-                  className="block p-4 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] flex items-center font-medium"
-                  onClick={closeMobileMenu}
-                >
-                  Post A Job
-                </Link>
-                
-                <Link 
-                  href="/hire" 
-                  className="block p-4 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] flex items-center font-medium"
-                  onClick={closeMobileMenu}
-                >
-                  Hire A Professional
-                </Link>
-              </div>
-
-              {/* Footer */}
-              <div className="p-6 border-t border-gray-200">
-                <div className="text-sm text-gray-600">
-                  Need help? <Link href="/contact" className="text-blue-600 hover:underline">Contact us</Link>
-                </div>
-              </div>
-            </nav>
-          </div>
-        )}
       </header>
 
       {/* HERO SECTION - Mobile-Optimized */}
@@ -379,7 +264,7 @@ export default function HomePage() {
               <button
                 key={index}
                 onClick={() => setSearchQuery(search)}
-                className="px-3 py-2 text-sm bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full transition-all font-sans shadow-sm hover:shadow-md active:scale-95 min-h-[44px] flex items-center"
+                className="px-2 py-1 text-xs bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full transition-all font-sans shadow-sm hover:shadow-md active:scale-95 min-h-[32px] flex items-center"
               >
                 {search}
               </button>

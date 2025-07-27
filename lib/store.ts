@@ -397,13 +397,11 @@ interface UIState {
   searchModalOpen: boolean
   notificationsOpen: boolean
   messagesOpen: boolean
-  mobileMenuOpen: boolean
   setSidebarOpen: (open: boolean) => void
   setTheme: (theme: "light" | "dark" | "system") => void
   setSearchModalOpen: (open: boolean) => void
   setNotificationsOpen: (open: boolean) => void
   setMessagesOpen: (open: boolean) => void
-  setMobileMenuOpen: (open: boolean) => void
   toggleSidebar: () => void
 }
 
@@ -414,7 +412,6 @@ export const useUIStore = create<UIState>()(
     searchModalOpen: false,
     notificationsOpen: false,
     messagesOpen: false,
-    mobileMenuOpen: false,
     setSidebarOpen: (open) =>
       set((state) => {
         state.sidebarOpen = open
@@ -434,10 +431,6 @@ export const useUIStore = create<UIState>()(
     setMessagesOpen: (open) =>
       set((state) => {
         state.messagesOpen = open
-      }),
-    setMobileMenuOpen: (open) =>
-      set((state) => {
-        state.mobileMenuOpen = open
       }),
     toggleSidebar: () =>
       set((state) => {

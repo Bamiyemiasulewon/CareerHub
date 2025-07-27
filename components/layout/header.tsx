@@ -26,8 +26,6 @@ import {
   Briefcase,
   Users,
   PlusCircle,
-  Menu,
-  X,
 } from "lucide-react"
 import { useAuthStore, useUIStore, useMessagingStore, useNotificationsStore, useUserDiscoveryStore } from "@/lib/store"
 import { UserSearchModal } from "@/components/user-search/user-search-modal"
@@ -49,7 +47,6 @@ export function Header() {
   const { unreadCount: notificationUnreadCount } = useNotificationsStore()
   const { loadSuggestedUsers, loadFeaturedUsers } = useUserDiscoveryStore()
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
   // Load user discovery data on mount
@@ -241,15 +238,7 @@ export function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  {/* Mobile Menu Toggle */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="md:hidden h-9 w-9 p-0"
-                  >
-                    {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                  </Button>
+
                 </>
               ) : (
                 <>
@@ -265,55 +254,7 @@ export function Header() {
             </div>
           </div>
 
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && user && (
-            <div className="md:hidden border-t border-gray-200 py-4">
-              <div className="space-y-2">
-                {/* Mobile Search */}
-                <form onSubmit={handleSearch} className="px-2 mb-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Search people, jobs, companies..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 w-full"
-                    />
-                  </div>
-                </form>
 
-                {/* Mobile Navigation Links */}
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center space-x-2 px-2 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.name}</span>
-                  </Link>
-                ))}
-
-                {/* Post Job (Mobile) */}
-                {(user.role === "employer" || user.role === "both") && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      router.push("/post-job")
-                      setMobileMenuOpen(false)
-                    }}
-                    className="w-full justify-start"
-                  >
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Post Job
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </header>
 
